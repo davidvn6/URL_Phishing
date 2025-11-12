@@ -25,8 +25,8 @@ def trainModel():
     train_time = None
     run_time = None
 
-    # Record when the model begins to run
-    start = time.time()
+    # Record when the function begins to run
+    func_start = time.time()
 
     # Load the data
     df = pd.read_csv("Phishing_URL_Dataset.csv")
@@ -48,3 +48,33 @@ def trainModel():
     stratify=y_data,             # Keep the class balance between train and test split
     )
 
+    # Feature extraction
+    # CountVectorizer will convert text into numbers for the ML model to learn from
+    # analyzer="char_wb" to analyze the character substring instead of words
+    # ngram_range=(3,5) to look at substrings that are 3 to 5 characters
+    count_vector = CountVectorizer(analyzer="char_wb", ngram_range=(3,5))
+
+    # Convert urls into numeric feature and then fit the data to the model
+    train_features = count_vector.fit_transform(x_train)
+
+    # Build a Multinominal Naive Bayes model because it works well with 
+    # characters (integer features once we convert the char)
+    MLmodel = MultinomialNB()
+    
+    # Record the time when the model training starts
+    model_start = time.time()
+
+    # Train the ML model
+    MLmodel.fit(train_features, y_train)
+
+    # Record time when model training ends
+    model_end = time.time()
+
+    # Calculate and print the training time
+    train_time = model_end - model_start
+    print(f"Model took {train_time} seconds to train")
+
+    # Transform the test split so that the urls are converted to numeric features
+    # and can be tested against the model
+    test_features = count_vector.transform(x_test)
+    
