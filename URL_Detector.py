@@ -32,7 +32,8 @@ def trainModel():
     df = pd.read_csv("Phishing_URL_Dataset.csv")
 
     # Look at first few rows to see how the data looks
-    print(df.head())
+    # Comment out once not needed
+    # print(df.head())
 
     # Split data into the train and test sets
     # Input features is just the url of the given site
@@ -77,4 +78,16 @@ def trainModel():
     # Transform the test split so that the urls are converted to numeric features
     # and can be tested against the model
     test_features = count_vector.transform(x_test)
-    
+    accuracy_number = MLmodel.score(test_features, y_test)
+    print(f"Accuracy of model is {accuracy_number}")
+
+    # Get the runtime of the entire function
+    func_end = time.time()
+    func_totaltime = func_end - func_start
+    print(f"Program runtime is {func_totaltime} seconds")
+
+def main():
+    trainModel()
+
+if __name__ == "__main__":
+    main()
