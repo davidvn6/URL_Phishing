@@ -95,7 +95,7 @@ def trainModel(csv_file="Preprocessed_Dataset.csv"):
     func_start = time.time()
 
     # Load the data
-    df = pd.read_csv("Phishing_URL_Dataset.csv")
+    df = pd.read_csv(csv_file)
 
     # Look at first few rows to see how the data looks
     # Comment out once not needed
