@@ -192,6 +192,9 @@ def trainModel(csv_file="Preprocessed_Dataset.csv"):
 
 def URLpredict(url):
 
+    # Going to calculate function runtime
+    start_time = time.time()
+
     # Load the model, vectorizer, and eval metrics
     MLmodel = joblib.load("trained_model.joblib")
     count_vector = joblib.load("vectorizer.joblib")
@@ -212,24 +215,28 @@ def URLpredict(url):
     predicting_factor = MLmodel.predict(final_features)[0]
 
     if predicting_factor == 0:
-        prediction = "Warning: This URL appears to be malicious ⚠️"
+        prediction = "Warning! This URL appears to be malicious ⚠️"
 
     elif predicting_factor == 1:
         prediction = "This URL appears to be safe ✅"
 
-    return accuracy, training_time, class_report, prediction, predicting_factor
+    # Calculate function runtime
+    runtime = round(time.time() - start_time, 2)
+
+    return accuracy, training_time, class_report, prediction, predicting_factor, runtime
 
 def main():
+    # Test the functions
     #dataset_preprocess()                          
     #trainModel()                                  
-    URLpredict("http://www.example.com/login")
-    URLpredict("http://www.secure-login-bank.com/verify?id=12345")
-    URLpredict("http://www.facebook.com")
-    URLpredict("http://www.google.com")
-    URLpredict("http://www.amazon.com")
-    URLpredict("https://www.rewildingargentina.org")
-    URLpredict("http://www.teramill.com")
-    URLpredict("http://paypa1-secure-login.com/verify/account")
+    #URLpredict("http://www.example.com/login")
+    #URLpredict("http://www.secure-login-bank.com/verify?id=12345")
+    #URLpredict("http://www.facebook.com")
+    #URLpredict("http://www.google.com")
+    #URLpredict("http://www.amazon.com")
+    #URLpredict("https://www.rewildingargentina.org")
+    #URLpredict("http://www.teramill.com")
+    #URLpredict("http://paypa1-secure-login.com/verify/account")
     URLpredict("http://g00gle-update.net/login")
 
 if __name__ == "__main__":

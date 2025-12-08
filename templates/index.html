@@ -13,7 +13,16 @@
         <h1 class="bodyText">URL Phishing Detector</h1>
             <h2 class="bodyText">Model Results</h2>
             <pre class="bodyText">Accuracy Score: {{accuracy}}</pre>
-            <pre class="bodyText">Training Time: {{training_time}} seconds</pre>
+            {% if training_time %}
+                <pre class="bodyText">Model Training Time: {{training_time}} seconds</pre>
+            {% else %}
+                <pre class="bodyText">Model Training Time: None</pre>
+            {% endif %}
+            {% if runtime %}
+                <pre class="bodyText">Prediction Run Time: {{runtime}} seconds</pre>
+            {% else %}
+                <pre class="bodyText">Prediction Run Time: None</pre>        
+            {% endif %}
             <pre class="bodyText">Entered URL: {{url}}</pre>
             {% if predicting_factor == 0 %}
                 <pre class="resultText-Malicious">Prediction Result: {{prediction}}</pre>
