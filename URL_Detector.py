@@ -95,7 +95,7 @@ def trainModel(csv_file="Preprocessed_Dataset.csv"):
     func_start = time.time()
 
     # Load the data
-    df = pd.read_csv("Phishing_URL_Dataset.csv")
+    df = pd.read_csv(csv_file)
 
     # Look at first few rows to see how the data looks
     # Comment out once not needed
@@ -103,7 +103,7 @@ def trainModel(csv_file="Preprocessed_Dataset.csv"):
 
     # Split data into the train and test sets
     # Input features is just the url of the given site
-    x_data = df["URL"]
+    x_data = df[["URL", "TLD"]]
     # Target variable is 0 or 1, which indicates whether the URL is malicious or not
     y_data = df["label"]
 
@@ -119,21 +119,27 @@ def trainModel(csv_file="Preprocessed_Dataset.csv"):
     # Transform your URLs into numbers for ML model to understand
     # High weight to rare but important character patterns, and low weight to common patterns
     # analyzer="char_wb": Look at character sequences
-    # ngram_range=(2,4): Use 2-character, 3-character, and 4-character sequences
-    # min_df=5: Use patterns that appear in 5 or more URLs
-    count_vector = TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 6), min_df=5)
+    # ngram_range=(2,7): Use 2-character, 3-character, ... , and then up to 7-characters
+    # min_df=2: Use patterns that appear in 2 or more URLs
+    # max_df=0.95: Ignore tokens in >95% of URLs
+    count_vector = TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 7), min_df=2, max_df=0.95)
 
     # Fit the tfidf only on the training URLs and transform both train and test
-    x_train_vec = count_vector.fit_transform(x_train)
-    x_test_vec = count_vector.transform(x_test)
+    x_train_vec = count_vector.fit_transform(x_train["URL"])
+    x_test_vec = count_vector.transform(x_test["URL"])
 
     # Extract numeric features for train and test
-    train_extra = extract_url_features(pd.DataFrame({"URL": x_train}))
-    test_extra = extract_url_features(pd.DataFrame({"URL": x_test}))
+    train_extra = extract_url_features(pd.DataFrame({"URL": x_train["URL"]}))
+    test_extra = extract_url_features(pd.DataFrame({"URL": x_test["URL"]}))
+
+    # Extract top level domain since it is a column in the data
+    tld_vectorizer = TfidfVectorizer(analyzer='word')
+    x_train_tld = tld_vectorizer.fit_transform(x_train["TLD"])
+    x_test_tld = tld_vectorizer.transform(x_test["TLD"])
 
     # Stack text features with numeric features
-    x_train_final = hstack([x_train_vec, train_extra])
-    x_test_final = hstack([x_test_vec, test_extra])
+    x_train_final = hstack([x_train_vec, train_extra, x_train_tld])
+    x_test_final = hstack([x_test_vec, test_extra, x_test_tld])
 
     # Compute class weights to handle imbalance 
     weights_array = compute_class_weight(class_weight="balanced",
@@ -180,6 +186,7 @@ def trainModel(csv_file="Preprocessed_Dataset.csv"):
     # Save trained model, vectorizer, and metrics
     joblib.dump(MLmodel, "trained_model.joblib")
     joblib.dump(count_vector, "vectorizer.joblib")
+    joblib.dump(tld_vectorizer, "tld_vectorizer.joblib")
     joblib.dump(train_time, "train_time.joblib")
     joblib.dump(accuracy_number, "accuracy.joblib")
     joblib.dump(classification_report(y_test, y_pred, target_names=["Malicious", "Not Malicious"]), "class_report.joblib")
@@ -198,6 +205,7 @@ def URLpredict(url):
     # Load the model, vectorizer, and eval metrics
     MLmodel = joblib.load("trained_model.joblib")
     count_vector = joblib.load("vectorizer.joblib")
+    tld_vectorizer = joblib.load("tld_vectorizer.joblib")
     loaded_training_time = joblib.load("train_time.joblib")
     loaded_accuracy = joblib.load("accuracy.joblib")
     class_report = joblib.load("class_report.joblib")
@@ -206,10 +214,11 @@ def URLpredict(url):
     training_time = round(loaded_training_time, 2)
     # Convert URL to numeric features
     url_vec = count_vector.transform([url])
+    url_tld = tld_vectorizer.transform([url])
     extra_features = extract_url_features(pd.DataFrame({"URL": [url]}))
 
     # Combine tfidf and numeric features
-    final_features = hstack([url_vec, extra_features])
+    final_features = hstack([url_vec, extra_features, url_tld])
 
     # Make prediction using the model
     predicting_factor = MLmodel.predict(final_features)[0]
