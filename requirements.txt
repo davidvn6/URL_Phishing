@@ -1,6 +1,6 @@
-flask
+Flask
 pandas
 numpy
 scikit-learn
-joblib
 scipy
+joblib
